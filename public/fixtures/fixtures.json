@@ -20,33 +20,33 @@
     "iesPath": "/fixtures/acolyte/scroll80-sw-so-24w.ies"
   },
   {
-    "id": "scroll80-vw-so-42w-all-on",
+    "id": "scroll80-vw-so-42w-allon",
     "name": "Scroll80 Pendant VW SO – 42W (All On)",
     "manufacturer": "Acolyte",
     "type": "Pendant",
     "mode": "VW SO",
     "output": "Standard Output - All On",
     "wattage": 42,
-    "iesPath": "/fixtures/acolyte/scroll80-vw-so-42w-all-on.ies"
+    "iesPath": "/fixtures/acolyte/scroll80-vw-so-42w-allon.ies"
   },
   {
-    "id": "scroll80-rgbw-so-48w-all-on",
+    "id": "scroll80-rgbw-so-48w-allon",
     "name": "Scroll80 Pendant RGBW SO – 48W (All On)",
     "manufacturer": "Acolyte",
     "type": "Pendant",
     "mode": "RGBW SO",
     "output": "Standard Output - All On",
     "wattage": 48,
-    "iesPath": "/fixtures/acolyte/scroll80-rgbw-so-48w-all-on.ies"
+    "iesPath": "/fixtures/acolyte/scroll80-rgbw-so-48w-allon.ies"
   },
   {
-    "id": "scroll80-vw-so-42w-cool-only",
+    "id": "scroll80-vw-so-42w-cool",
     "name": "Scroll80 Pendant VW SO – 42W (Cool Only)",
     "manufacturer": "Acolyte",
     "type": "Pendant",
     "mode": "VW SO",
     "output": "Standard Output - Cool Only",
     "wattage": 42,
-    "iesPath": "/fixtures/acolyte/scroll80-vw-so-42w-cool-only.ies"
+    "iesPath": "/fixtures/acolyte/scroll80-vw-so-42w-cool.ies"
   }
 ]

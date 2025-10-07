@@ -76,3 +76,91 @@ function animate() {
 // Start the animation
 console.log('Starting animation loop');
 animate();
+
+// Load and display fixtures
+let fixtures = [];
+
+async function loadFixtures() {
+  try {
+    const response = await fetch('/fixtures/fixtures.json');
+    fixtures = await response.json();
+    console.log('Fixtures loaded:', fixtures);
+    renderFixtureList(fixtures);
+  } catch (error) {
+    console.error('Error loading fixtures:', error);
+  }
+}
+
+function renderFixtureList(fixtureList) {
+  const listContainer = document.getElementById('fixture-list');
+  listContainer.innerHTML = '';
+  
+  fixtureList.forEach(fixture => {
+    const fixtureCard = document.createElement('div');
+    fixtureCard.className = 'fixture-card';
+    
+    fixtureCard.innerHTML = `
+      <div class="fixture-info">
+        <h3>${fixture.name}</h3>
+        <p><strong>Manufacturer:</strong> ${fixture.manufacturer}</p>
+        <p><strong>Type:</strong> ${fixture.type}</p>
+        <p><strong>Mode:</strong> ${fixture.mode}</p>
+        <p><strong>Output:</strong> ${fixture.output}</p>
+        <p><strong>Wattage:</strong> ${fixture.wattage}W</p>
+      </div>
+      <button class="add-to-scene-btn" data-id="${fixture.id}">Add to Scene</button>
+    `;
+    
+    listContainer.appendChild(fixtureCard);
+  });
+  
+  // Add event listeners to all "Add to Scene" buttons
+  document.querySelectorAll('.add-to-scene-btn').forEach(btn => {
+    btn.addEventListener('click', handleAddToScene);
+  });
+}
+
+async function handleAddToScene(event) {
+  const fixtureId = event.target.getAttribute('data-id');
+  const fixture = fixtures.find(f => f.id === fixtureId);
+  
+  if (!fixture) {
+    console.error('Fixture not found:', fixtureId);
+    return;
+  }
+  
+  console.log('Adding fixture to scene:', fixture.name);
+  
+  try {
+    const response = await fetch(fixture.iesPath);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch IES file: ${response.statusText}`);
+    }
+    
+    const iesData = await response.text();
+    console.log('IES file loaded for:', fixture.name);
+    console.log('IES file path:', fixture.iesPath);
+    console.log('IES file contents:', iesData);
+    console.log('---');
+    
+    // TODO: Parse IES data and create light in scene
+    // For now, just logging the data
+    
+  } catch (error) {
+    console.error('Error loading IES file:', error);
+  }
+}
+
+// Search functionality
+document.getElementById('search').addEventListener('input', (event) => {
+  const searchTerm = event.target.value.toLowerCase();
+  const filteredFixtures = fixtures.filter(fixture => 
+    fixture.name.toLowerCase().includes(searchTerm) ||
+    fixture.manufacturer.toLowerCase().includes(searchTerm) ||
+    fixture.mode.toLowerCase().includes(searchTerm)
+  );
+  renderFixtureList(filteredFixtures);
+});
+
+// Initialize fixtures
+loadFixtures();

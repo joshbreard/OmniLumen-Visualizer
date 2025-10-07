@@ -11,7 +11,6 @@ canvas {
   height: 100vh;
 }
 
-/* Ensure no scrollbars appear */
 html, body {
   height: 100%;
   width: 100%;
@@ -20,11 +19,111 @@ html, body {
   overflow: hidden;
 }
 
-/* Make sure the canvas fills the entire viewport */
 #scene {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+#sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 350px;
+  height: 100vh;
+  background: rgba(30, 30, 30, 0.95);
+  color: #fff;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.sidebar-header {
+  padding: 20px;
+  background: rgba(20, 20, 20, 0.98);
+  border-bottom: 2px solid #444;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.sidebar-header h2 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 24px;
+}
+
+#search {
+  width: 100%;
+  padding: 10px;
+  background: rgba(50, 50, 50, 0.8);
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+#search:focus {
+  outline: none;
+  border-color: #00ff00;
+}
+
+#fixture-list {
+  padding: 10px;
+}
+
+.fixture-card {
+  background: rgba(40, 40, 40, 0.9);
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.fixture-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 255, 0, 0.2);
+  border-color: #00ff00;
+}
+
+.fixture-info h3 {
+  margin: 0 0 10px 0;
+  color: #00ff00;
+  font-size: 16px;
+}
+
+.fixture-info p {
+  margin: 5px 0;
+  font-size: 13px;
+  color: #ccc;
+}
+
+.fixture-info strong {
+  color: #fff;
+}
+
+.add-to-scene-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background: #00ff00;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.add-to-scene-btn:hover {
+  background: #00cc00;
+}
+
+.add-to-scene-btn:active {
+  background: #009900;
 }
