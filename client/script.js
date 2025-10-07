@@ -60,6 +60,33 @@ viewportEl.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.target.set(0, 1.2, 0);
+
+const emptyEnvironment = createEmptyEnvironment();
+const roomEnvironment = createRoomEnvironment();
+scene.add(emptyEnvironment);
+scene.add(roomEnvironment);
+
+let environmentMode = environmentSelect?.value ?? "empty";
+setEnvironmentMode(environmentMode);
+
+const heatmapPlane = createHeatmapPlane({ size: 25, resolution: 96 });
+heatmapPlane.visible = false;
+scene.add(heatmapPlane);
+
+// Low-level base lighting so the room and reference cube stay visible even before fixtures are added.
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.28);
+scene.add(ambientLight);
+
+// Soft hemisphere fill to gently lift shadowed areas without washing out photometric fixtures.
+const hemiLight = new THREE.HemisphereLight(0x58709b, 0x040506, 0.18);
+scene.add(hemiLight);
+
+// Directional key light aimed toward the origin to ensure the cube and environments are readable on load.
+const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+keyLight.position.set(6, 7, 5);
+keyLight.target.position.set(0, 1.2, 0);
+scene.add(keyLight);
+scene.add(keyLight.target);
 controls.target.set(0, 1.1, 0);
 
 // Create a cube room (inverted box)
