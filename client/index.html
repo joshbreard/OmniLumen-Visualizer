@@ -403,6 +403,36 @@
             Heatmap
           </label>
         </div>
+        <div class="control-field">
+          <label for="volumetric-density">Density</label>
+          <div class="range-track">
+            <input
+              type="range"
+              id="volumetric-density"
+              min="0.05"
+              max="0.8"
+              step="0.01"
+              value="0.4"
+              disabled
+            />
+            <span class="range-value" id="volumetric-density-value">0.40</span>
+          </div>
+        </div>
+        <div class="control-field">
+          <label for="volumetric-falloff">Falloff</label>
+          <div class="range-track">
+            <input
+              type="range"
+              id="volumetric-falloff"
+              min="0.02"
+              max="0.4"
+              step="0.01"
+              value="0.08"
+              disabled
+            />
+            <span class="range-value" id="volumetric-falloff-value">0.08</span>
+          </div>
+        </div>
       </section>
       <ul id="fixture-list" aria-live="polite"></ul>
     </aside>

@@ -20,6 +20,13 @@ const yawValueEl = document.getElementById("yaw-value");
 const pitchValueEl = document.getElementById("pitch-value");
 const volumetricsToggle = document.getElementById("volumetrics-toggle");
 const heatmapToggle = document.getElementById("heatmap-toggle");
+const volumetricDensityRange = document.getElementById("volumetric-density");
+const volumetricFalloffRange = document.getElementById("volumetric-falloff");
+const volumetricDensityValueEl = document.getElementById("volumetric-density-value");
+const volumetricFalloffValueEl = document.getElementById("volumetric-falloff-value");
+
+let volumetricDensityDefault = Number(volumetricDensityRange?.value ?? 0.4);
+let volumetricFalloffDefault = Number(volumetricFalloffRange?.value ?? 0.08);
 
 const ceilingHeight = 3.25;
 
@@ -258,6 +265,11 @@ async function handleAddFixture(fixture) {
       intensity: initialIntensity,
       colorTemp: initialCCT,
       volumetricMesh: null,
+      volumetricParams: {
+        opacity: volumetricDensityDefault,
+        attenuation: volumetricFalloffDefault,
+        noise: 0,
+      },
     };
 
     entry.updateVolumetric = () => {
@@ -269,6 +281,9 @@ async function handleAddFixture(fixture) {
         light: entry.light,
         target: entry.target,
         intensity: entry.intensity,
+        opacity: entry.volumetricParams.opacity,
+        attenuation: entry.volumetricParams.attenuation,
+        noise: entry.volumetricParams.noise,
       });
     };
 
@@ -343,6 +358,7 @@ function setSelectedLight(id) {
   }
   updateControlAvailability();
   syncControlsToSelectedLight();
+  syncVolumetricControls();
   updateHeatmapForSelected();
 }
 
@@ -368,6 +384,26 @@ function syncControlsToSelectedLight() {
   updateRangeLabels();
 }
 
+function syncVolumetricControls() {
+  const entry = getSelectedLight();
+  if (!volumetricDensityRange || !volumetricFalloffRange) return;
+
+  if (!entry) {
+    volumetricDensityRange.value = volumetricDensityRange.defaultValue ?? "0.4";
+    volumetricFalloffRange.value = volumetricFalloffRange.defaultValue ?? "0.08";
+  } else {
+    const density = entry.volumetricParams?.opacity ?? volumetricDensityDefault;
+    const falloff = entry.volumetricParams?.attenuation ?? volumetricFalloffDefault;
+    volumetricDensityRange.value = density.toFixed(2);
+    volumetricFalloffRange.value = falloff.toFixed(2);
+  }
+
+  volumetricDensityDefault = Number(volumetricDensityRange.value);
+  volumetricFalloffDefault = Number(volumetricFalloffRange.value);
+  updateVolumetricRangeLabels();
+  updateVolumetricSliderState();
+}
+
 function updateControlAvailability() {
   const hasLights = lightRegistry.length > 0;
   selectedLightSelect.disabled = !hasLights;
@@ -381,11 +417,29 @@ function updateControlAvailability() {
   }
 }
 
+function updateVolumetricSliderState() {
+  if (!volumetricDensityRange || !volumetricFalloffRange) return;
+  const entry = getSelectedLight();
+  const enabled = Boolean(volumetricsEnabled && entry);
+  volumetricDensityRange.disabled = !enabled;
+  volumetricFalloffRange.disabled = !enabled;
+}
+
 function updateRangeLabels() {
   intensityValueEl.textContent = `${intensityRange.value}`;
   cctValueEl.textContent = `${cctRange.value}K`;
   yawValueEl.textContent = `${yawRange.value}°`;
   pitchValueEl.textContent = `${pitchRange.value}°`;
+}
+
+function updateVolumetricRangeLabels() {
+  if (!volumetricDensityRange || !volumetricFalloffRange) return;
+  if (volumetricDensityValueEl) {
+    volumetricDensityValueEl.textContent = Number(volumetricDensityRange.value).toFixed(2);
+  }
+  if (volumetricFalloffValueEl) {
+    volumetricFalloffValueEl.textContent = Number(volumetricFalloffRange.value).toFixed(2);
+  }
 }
 
 function applyLightIntensity(entry) {
@@ -457,6 +511,7 @@ function computeLightDirection(light, target) {
 function ensureVolumetric(entry) {
   if (!entry) return;
   if (!entry.volumetricMesh) {
+    const mesh = createVolumetricBeam(entry.light.color, entry.volumetricParams);
     const mesh = createVolumetricBeam(entry.light.color);
     mesh.visible = volumetricsEnabled;
     entry.anchor.add(mesh);
@@ -536,6 +591,11 @@ volumetricsToggle?.addEventListener("change", (event) => {
       entry.volumetricMesh.visible = false;
     }
   }
+  updateVolumetricSliderState();
+  const entry = getSelectedLight();
+  if (volumetricsEnabled && entry) {
+    entry.updateVolumetric?.();
+  }
 });
 
 heatmapToggle?.addEventListener("change", (event) => {
@@ -543,10 +603,32 @@ heatmapToggle?.addEventListener("change", (event) => {
   updateHeatmapForSelected();
 });
 
+volumetricDensityRange?.addEventListener("input", () => {
+  volumetricDensityDefault = Number(volumetricDensityRange.value);
+  updateVolumetricRangeLabels();
+  const entry = getSelectedLight();
+  if (!entry || !volumetricsEnabled) return;
+  entry.volumetricParams.opacity = volumetricDensityDefault;
+  ensureVolumetric(entry);
+  entry.updateVolumetric?.();
+});
+
+volumetricFalloffRange?.addEventListener("input", () => {
+  volumetricFalloffDefault = Number(volumetricFalloffRange.value);
+  updateVolumetricRangeLabels();
+  const entry = getSelectedLight();
+  if (!entry || !volumetricsEnabled) return;
+  entry.volumetricParams.attenuation = volumetricFalloffDefault;
+  ensureVolumetric(entry);
+  entry.updateVolumetric?.();
+});
+
 loadFixtures();
 updateRangeLabels();
 updateControlAvailability();
 updateHeatmapForSelected();
+updateVolumetricRangeLabels();
+updateVolumetricSliderState();
 
 // Animation loop
 function animate() {
