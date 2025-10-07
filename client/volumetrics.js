@@ -29,6 +29,8 @@ export function createVolumetricBeam(
     noise = 0.0,
   } = {}
 ) {
+
+export function createVolumetricBeam(baseColor = new THREE.Color(1, 1, 1)) {
   const geometry = new THREE.ConeGeometry(1, 1, 48, 1, true);
   geometry.translate(0, -0.5, 0);
   geometry.rotateX(Math.PI);
@@ -42,6 +44,8 @@ export function createVolumetricBeam(
   };
 
   applySceneScale(uniforms, { opacity, attenuation, noise });
+
+  };
 
   const material = new THREE.ShaderMaterial({
     uniforms,
@@ -86,6 +90,14 @@ export function createVolumetricBeam(
         }
         vec3 color = uColor * (0.55 + 0.45 * (1.0 - vHeight));
         gl_FragColor = vec4(color * (uIntensity * uOpacity), alpha);
+        float axial = pow(clamp(vHeight, 0.0, 1.0), 1.4);
+        float body = (1.0 - rim) * axial;
+        float alpha = clamp(body * uIntensity, 0.0, 1.0);
+        if (alpha <= 0.002) {
+          discard;
+        }
+        vec3 color = uColor * (0.65 + 0.35 * (1.0 - vHeight));
+        gl_FragColor = vec4(color * uIntensity, alpha);
       }
     `,
   });
@@ -105,6 +117,7 @@ export function updateVolumetricBeam({
   attenuation,
   noise,
 }) {
+export function updateVolumetricBeam({ mesh, light, target, intensity }) {
   if (!mesh || !light || !target) return;
 
   light.getWorldPosition(_origin);
