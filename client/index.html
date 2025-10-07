@@ -1,20 +1,380 @@
-<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Three.js Lighting Fixtures</title>
-  <link rel="stylesheet" href="./style.css" />
-</head>
-<body>
-  <div id="sidebar">
-    <div class="sidebar-header">
-      <h2>Lighting Fixtures</h2>
-      <input type="text" id="search" placeholder="Search fixtures..." />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OmniLumen IES Viewer</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0b0f1a;
+        color: #f5f7fb;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body {
+        display: flex;
+        align-items: stretch;
+      }
+
+      #fixture-panel {
+        width: 360px;
+        max-width: 100%;
+        height: 100vh;
+        background: rgba(17, 23, 38, 0.94);
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 10px 0 24px rgba(0, 0, 0, 0.45);
+        padding: 1.5rem 1.4rem 1.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      #fixture-panel header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      #fixture-panel h1 {
+        margin: 0;
+        font-size: 1.35rem;
+        letter-spacing: 0.02em;
+      }
+
+      #fixture-panel p {
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: rgba(245, 247, 251, 0.7);
+      }
+
+      #fixture-search {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border-radius: 0.65rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(27, 38, 59, 0.9);
+        color: inherit;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      #fixture-search:focus {
+        border-color: rgba(255, 200, 87, 0.75);
+        box-shadow: 0 0 0 2px rgba(255, 200, 87, 0.18);
+      }
+
+      #controls-card {
+        background: rgba(27, 38, 59, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 0.9rem;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        box-shadow: 0 18px 32px rgba(5, 10, 20, 0.35);
+      }
+
+      #controls-card h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      #controls-card h2::before {
+        content: "";
+        width: 0.65rem;
+        height: 0.65rem;
+        border-radius: 999px;
+        background: #ffc857;
+        box-shadow: 0 0 12px rgba(255, 200, 87, 0.75);
+      }
+
+      .control-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .control-field label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        color: rgba(245, 247, 251, 0.68);
+      }
+
+      .control-field select,
+      .control-field input[type="range"] {
+        width: 100%;
+      }
+
+      .control-field select {
+        appearance: none;
+        padding: 0.55rem 0.75rem;
+        border-radius: 0.65rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(13, 19, 32, 0.85);
+        color: inherit;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.15s ease;
+      }
+
+      .control-field select:focus {
+        border-color: rgba(255, 200, 87, 0.7);
+      }
+
+      .range-track {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+      }
+
+      .range-track input[type="range"] {
+        flex: 1;
+      }
+
+      .range-value {
+        width: 4.5rem;
+        text-align: right;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.75);
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        outline: none;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #ffc857;
+        cursor: pointer;
+        box-shadow: 0 0 0 3px rgba(255, 200, 87, 0.2);
+        transition: transform 0.15s ease;
+      }
+
+      input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #ffc857;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 0 0 3px rgba(255, 200, 87, 0.2);
+      }
+
+      #fixture-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        overflow-y: auto;
+      }
+
+      .fixture-card {
+        background: rgba(27, 38, 59, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 0.85rem;
+        padding: 0.95rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        box-shadow: 0 16px 28px rgba(8, 12, 22, 0.32);
+      }
+
+      .fixture-card h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .fixture-meta {
+        font-size: 0.78rem;
+        color: rgba(245, 247, 251, 0.7);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+      }
+
+      .fixture-meta span {
+        background: rgba(11, 15, 26, 0.45);
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+      }
+
+      .fixture-card button {
+        align-self: flex-start;
+        border: none;
+        background: linear-gradient(135deg, #ffc857, #ffb347);
+        color: #0b0f1a;
+        font-weight: 600;
+        border-radius: 999px;
+        padding: 0.45rem 0.95rem;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .fixture-card button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 18px rgba(255, 200, 87, 0.4);
+      }
+
+      .fixture-card button:active {
+        transform: translateY(0);
+      }
+
+      #fixture-empty-state {
+        font-size: 0.85rem;
+        color: rgba(245, 247, 251, 0.6);
+        padding: 0.85rem;
+        text-align: center;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        border-radius: 0.85rem;
+      }
+
+      #viewport {
+        position: relative;
+        flex: 1;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      #overlay {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        color: #fff;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.45);
+        padding: 0.75rem 1rem;
+        border-radius: 0.65rem;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        max-width: 18rem;
+        backdrop-filter: blur(4px);
+      }
+    </style>
+  </head>
+  <body>
+    <aside id="fixture-panel">
+      <header>
+        <h1>Lighting Fixtures</h1>
+        <p>
+          Browse Acolyte products, add their photometry to the room, and tweak the
+          output to study the beam.
+        </p>
+      </header>
+      <input
+        type="search"
+        id="fixture-search"
+        placeholder="Search by name or mode..."
+        aria-label="Search fixtures"
+      />
+      <section id="controls-card" aria-labelledby="controls-heading">
+        <h2 id="controls-heading">Scene Controls</h2>
+        <div class="control-field">
+          <label for="selected-light">Selected Light</label>
+          <select id="selected-light" aria-label="Selected light">
+            <option value="" disabled selected>No lights yet</option>
+          </select>
+        </div>
+        <div class="control-field">
+          <label for="intensity-range">Intensity</label>
+          <div class="range-track">
+            <input
+              type="range"
+              id="intensity-range"
+              min="0"
+              max="5000"
+              step="10"
+              value="1500"
+            />
+            <span class="range-value" id="intensity-value">1500</span>
+          </div>
+        </div>
+        <div class="control-field">
+          <label for="cct-range">Color Temp (K)</label>
+          <div class="range-track">
+            <input
+              type="range"
+              id="cct-range"
+              min="2700"
+              max="6500"
+              step="50"
+              value="3500"
+            />
+            <span class="range-value" id="cct-value">3500K</span>
+          </div>
+        </div>
+        <div class="control-field">
+          <label for="yaw-range">Yaw / Pan</label>
+          <div class="range-track">
+            <input
+              type="range"
+              id="yaw-range"
+              min="-180"
+              max="180"
+              step="1"
+              value="0"
+            />
+            <span class="range-value" id="yaw-value">0°</span>
+          </div>
+        </div>
+        <div class="control-field">
+          <label for="pitch-range">Pitch / Tilt</label>
+          <div class="range-track">
+            <input
+              type="range"
+              id="pitch-range"
+              min="-90"
+              max="0"
+              step="1"
+              value="-90"
+            />
+            <span class="range-value" id="pitch-value">-90°</span>
+          </div>
+        </div>
+      </section>
+      <ul id="fixture-list" aria-live="polite"></ul>
+    </aside>
+    <div id="viewport">
+      <div id="overlay">
+        <strong>OmniLumen • Task 1</strong>
+        <div>Rotating cube room with configurable IES fixtures.</div>
+      </div>
     </div>
-    <div id="fixture-list"></div>
-  </div>
-  <canvas id="scene"></canvas>
-  <script type="module" src="./script.js"></script>
-</body>
+    <script type="module" src="./script.js"></script>
+  </body>
 </html>

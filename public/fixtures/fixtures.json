@@ -1,52 +1,58 @@
 [
   {
-    "id": "scroll80-sw-ho-48w",
-    "name": "Scroll80 Pendant SW HO – 48W",
-    "manufacturer": "Acolyte",
-    "type": "Pendant",
-    "mode": "SW HO",
-    "output": "High Output",
+    "name": "Acolyte Prism Line 8ft",
+    "mode": "Asymmetric",
+    "outputType": "Wall Wash",
+    "wattage": 58,
+    "iesPath": "/fixtures/acolyte/prism-line-8ft.ies"
+  },
+  {
+    "name": "Acolyte Accent 2ft",
+    "mode": "Narrow",
+    "outputType": "Accent",
+    "wattage": 18,
+    "iesPath": "/fixtures/acolyte/accent-2ft.ies"
+  },
+  {
+    "name": "Acolyte Cove 4ft",
+    "mode": "Cove",
+    "outputType": "Ambient",
+    "wattage": 24,
+    "iesPath": "/fixtures/acolyte/cove-4ft.ies"
+  },
+  {
+    "name": "Acolyte Beam 15°",
+    "mode": "Spot",
+    "outputType": "Beam",
+    "wattage": 32,
+    "iesPath": "/fixtures/acolyte/beam-15deg.ies"
+  },
+  {
+    "name": "Acolyte Graze 3ft",
+    "mode": "Grazing",
+    "outputType": "Linear",
+    "wattage": 21,
+    "iesPath": "/fixtures/acolyte/graze-3ft.ies"
+  },
+  {
+    "name": "Scroll80 Pendant SW HO — 48W",
+    "mode": "Scroll80",
+    "outputType": "Suspended Wide",
     "wattage": 48,
     "iesPath": "/fixtures/acolyte/scroll80-sw-ho-48w.ies"
   },
   {
-    "id": "scroll80-sw-so-24w",
-    "name": "Scroll80 Pendant SW SO – 24W",
-    "manufacturer": "Acolyte",
-    "type": "Pendant",
-    "mode": "SW SO",
-    "output": "Standard Output",
+    "name": "Scroll80 Pendant SW SO — 24W",
+    "mode": "Scroll80",
+    "outputType": "Suspended Wide",
     "wattage": 24,
     "iesPath": "/fixtures/acolyte/scroll80-sw-so-24w.ies"
   },
   {
-    "id": "scroll80-vw-so-42w-allon",
-    "name": "Scroll80 Pendant VW SO – 42W (All On)",
-    "manufacturer": "Acolyte",
-    "type": "Pendant",
-    "mode": "VW SO",
-    "output": "Standard Output - All On",
+    "name": "Scroll80 Pendant VW SO — 42W (All On)",
+    "mode": "Scroll80",
+    "outputType": "Suspended Wide",
     "wattage": 42,
-    "iesPath": "/fixtures/acolyte/scroll80-vw-so-42w-allon.ies"
-  },
-  {
-    "id": "scroll80-rgbw-so-48w-allon",
-    "name": "Scroll80 Pendant RGBW SO – 48W (All On)",
-    "manufacturer": "Acolyte",
-    "type": "Pendant",
-    "mode": "RGBW SO",
-    "output": "Standard Output - All On",
-    "wattage": 48,
-    "iesPath": "/fixtures/acolyte/scroll80-rgbw-so-48w-allon.ies"
-  },
-  {
-    "id": "scroll80-vw-so-42w-cool",
-    "name": "Scroll80 Pendant VW SO – 42W (Cool Only)",
-    "manufacturer": "Acolyte",
-    "type": "Pendant",
-    "mode": "VW SO",
-    "output": "Standard Output - Cool Only",
-    "wattage": 42,
-    "iesPath": "/fixtures/acolyte/scroll80-vw-so-42w-cool.ies"
+    "iesPath": "/fixtures/acolyte/scroll80-vw-so-42w-all-on.ies"
   }
 ]
