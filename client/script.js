@@ -29,6 +29,9 @@ const volumetricFalloffValueEl = document.getElementById("volumetric-falloff-val
 let volumetricDensityDefault = Number(volumetricDensityRange?.value ?? 0.4);
 let volumetricFalloffDefault = Number(volumetricFalloffRange?.value ?? 0.08);
 
+let volumetricDensityDefault = Number(volumetricDensityRange?.value ?? 0.4);
+let volumetricFalloffDefault = Number(volumetricFalloffRange?.value ?? 0.08);
+
 const ceilingHeight = 3.0;
 
 // Scene setup
@@ -84,6 +87,64 @@ keyLight.position.set(6, 7, 5);
 keyLight.target.position.set(0, 1.2, 0);
 scene.add(keyLight);
 scene.add(keyLight.target);
+controls.target.set(0, 1.1, 0);
+
+// Create a cube room (inverted box)
+const roomSize = 10;
+const roomGeometry = new THREE.BoxGeometry(roomSize, roomSize, roomSize);
+const roomMaterial = new THREE.MeshStandardMaterial({
+  color: 0x1b263b,
+  side: THREE.BackSide,
+  roughness: 0.85,
+  metalness: 0.05,
+});
+const room = new THREE.Mesh(roomGeometry, roomMaterial);
+scene.add(room);
+
+// Ground plane for reference
+const groundGeometry = new THREE.PlaneGeometry(25, 25);
+const groundMaterial = new THREE.MeshStandardMaterial({
+  color: 0x0f172a,
+  roughness: 0.95,
+  metalness: 0.01,
+});
+const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = 0;
+scene.add(ground);
+
+const heatmapPlane = createHeatmapPlane({ size: 25, resolution: 96 });
+heatmapPlane.visible = false;
+scene.add(heatmapPlane);
+
+// Ceiling reference disk
+const ceilingGeometry = new THREE.CircleGeometry(3.5, 48);
+const ceilingMaterial = new THREE.MeshBasicMaterial({
+  color: 0x294166,
+  transparent: true,
+  opacity: 0.45,
+  side: THREE.DoubleSide,
+});
+const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+ceiling.rotation.x = Math.PI / 2;
+ceiling.position.y = ceilingHeight;
+scene.add(ceiling);
+
+const emptyEnvironment = createEmptyEnvironment();
+const roomEnvironment = createRoomEnvironment();
+scene.add(emptyEnvironment);
+scene.add(roomEnvironment);
+
+let environmentMode = environmentSelect?.value ?? "empty";
+setEnvironmentMode(environmentMode);
+
+const heatmapPlane = createHeatmapPlane({ size: 25, resolution: 96 });
+heatmapPlane.visible = false;
+scene.add(heatmapPlane);
+
+// Subtle ambient to keep the environment readable without overpowering photometric lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.12);
+scene.add(ambientLight);
 
 // Rotating cube to keep original reference geometry
 const referenceCube = new THREE.Mesh(
@@ -617,6 +678,7 @@ function ensureVolumetric(entry) {
   if (!entry) return;
   if (!entry.volumetricMesh) {
     const mesh = createVolumetricBeam(entry.light.color, entry.volumetricParams);
+    const mesh = createVolumetricBeam(entry.light.color);
     mesh.visible = volumetricsEnabled;
     entry.anchor.add(mesh);
     entry.volumetricMesh = mesh;
