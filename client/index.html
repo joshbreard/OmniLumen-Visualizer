@@ -162,6 +162,23 @@
         color: rgba(255, 255, 255, 0.75);
       }
 
+      .control-toggle label {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: 0.82rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: rgba(245, 247, 251, 0.78);
+      }
+
+      .control-toggle input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #ffc857;
+        cursor: pointer;
+      }
+
       input[type="range"] {
         -webkit-appearance: none;
         appearance: none;
@@ -372,6 +389,55 @@
               value="-90"
             />
             <span class="range-value" id="pitch-value">-90°</span>
+          </div>
+        </div>
+        <div class="control-field control-toggle">
+          <label for="volumetrics-toggle">
+            <input type="checkbox" id="volumetrics-toggle" />
+            Volumetrics
+          </label>
+        </div>
+        <div class="control-field">
+          <label for="environment-select">Environment</label>
+          <select id="environment-select">
+            <option value="empty" selected>Empty Scene</option>
+            <option value="room">Room Scene</option>
+          </select>
+        </div>
+        <div class="control-field control-toggle">
+          <label for="heatmap-toggle">
+            <input type="checkbox" id="heatmap-toggle" />
+            Heatmap
+          </label>
+        </div>
+        <div class="control-field">
+          <label for="volumetric-density">Density</label>
+          <div class="range-track">
+            <input
+              type="range"
+              id="volumetric-density"
+              min="0.05"
+              max="0.8"
+              step="0.01"
+              value="0.4"
+              disabled
+            />
+            <span class="range-value" id="volumetric-density-value">0.40</span>
+          </div>
+        </div>
+        <div class="control-field">
+          <label for="volumetric-falloff">Falloff</label>
+          <div class="range-track">
+            <input
+              type="range"
+              id="volumetric-falloff"
+              min="0.02"
+              max="0.4"
+              step="0.01"
+              value="0.08"
+              disabled
+            />
+            <span class="range-value" id="volumetric-falloff-value">0.08</span>
           </div>
         </div>
       </section>
