@@ -162,6 +162,23 @@
         color: rgba(255, 255, 255, 0.75);
       }
 
+      .control-toggle label {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: 0.82rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: rgba(245, 247, 251, 0.78);
+      }
+
+      .control-toggle input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #ffc857;
+        cursor: pointer;
+      }
+
       input[type="range"] {
         -webkit-appearance: none;
         appearance: none;
@@ -373,6 +390,18 @@
             />
             <span class="range-value" id="pitch-value">-90°</span>
           </div>
+        </div>
+        <div class="control-field control-toggle">
+          <label for="volumetrics-toggle">
+            <input type="checkbox" id="volumetrics-toggle" />
+            Volumetrics
+          </label>
+        </div>
+        <div class="control-field control-toggle">
+          <label for="heatmap-toggle">
+            <input type="checkbox" id="heatmap-toggle" />
+            Heatmap
+          </label>
         </div>
       </section>
       <ul id="fixture-list" aria-live="polite"></ul>

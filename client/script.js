@@ -3,6 +3,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 // Local photometry utilities that load IES files and derive light helpers.
 import { loadIESLight, kelvinToRGB } from "./ies.js";
+import { createVolumetricBeam, updateVolumetricBeam } from "./volumetrics.js";
+import { createHeatmapPlane, updateHeatmapUniforms } from "./heatmap.js";
 
 const viewportEl = document.getElementById("viewport");
 const fixtureListEl = document.getElementById("fixture-list");
@@ -16,6 +18,8 @@ const intensityValueEl = document.getElementById("intensity-value");
 const cctValueEl = document.getElementById("cct-value");
 const yawValueEl = document.getElementById("yaw-value");
 const pitchValueEl = document.getElementById("pitch-value");
+const volumetricsToggle = document.getElementById("volumetrics-toggle");
+const heatmapToggle = document.getElementById("heatmap-toggle");
 
 const ceilingHeight = 3.25;
 
@@ -70,6 +74,10 @@ ground.rotation.x = -Math.PI / 2;
 ground.position.y = 0;
 scene.add(ground);
 
+const heatmapPlane = createHeatmapPlane({ size: 25, resolution: 96 });
+heatmapPlane.visible = false;
+scene.add(heatmapPlane);
+
 // Ceiling reference disk
 const ceilingGeometry = new THREE.CircleGeometry(3.5, 48);
 const ceilingMaterial = new THREE.MeshBasicMaterial({
@@ -105,6 +113,8 @@ let fixtures = [];
 
 const lightRegistry = [];
 let selectedLightId = "";
+let volumetricsEnabled = false;
+let heatmapEnabled = false;
 
 function renderFixtures(list) {
   fixtureListEl.innerHTML = "";
@@ -247,12 +257,29 @@ async function handleAddFixture(fixture) {
       pitch: Number(pitchRange.value),
       intensity: initialIntensity,
       colorTemp: initialCCT,
+      volumetricMesh: null,
+    };
+
+    entry.updateVolumetric = () => {
+      if (!entry.volumetricMesh || !entry.volumetricMesh.visible) {
+        return;
+      }
+      updateVolumetricBeam({
+        mesh: entry.volumetricMesh,
+        light: entry.light,
+        target: entry.target,
+        intensity: entry.intensity,
+      });
     };
 
     updateLightTarget(entry);
     applyLightIntensity(entry);
     applyLightColor(entry);
     helperUpdate();
+
+    if (volumetricsEnabled) {
+      ensureVolumetric(entry);
+    }
 
     lightRegistry.push(entry);
     addLightOption(entry);
@@ -316,6 +343,7 @@ function setSelectedLight(id) {
   }
   updateControlAvailability();
   syncControlsToSelectedLight();
+  updateHeatmapForSelected();
 }
 
 function getSelectedLight() {
@@ -362,6 +390,10 @@ function updateRangeLabels() {
 
 function applyLightIntensity(entry) {
   entry.light.intensity = entry.intensity;
+  entry.updateVolumetric?.();
+  if (entry.id === selectedLightId) {
+    updateHeatmapForSelected();
+  }
 }
 
 function applyLightColor(entry) {
@@ -369,6 +401,10 @@ function applyLightColor(entry) {
   entry.light.color.setRGB(r, g, b);
   if (entry.helper && !entry.helper.isSpotLightHelper && entry.helper.material?.color) {
     entry.helper.material.color.setRGB(r, g, b);
+  }
+  entry.updateVolumetric?.();
+  if (entry.id === selectedLightId) {
+    updateHeatmapForSelected();
   }
 }
 
@@ -390,6 +426,9 @@ function updateLightTarget(entry) {
   );
   entry.light.distance = Math.max(distance * 1.2, 5);
   entry.light.target.updateMatrixWorld();
+  if (entry.id === selectedLightId) {
+    updateHeatmapForSelected();
+  }
 }
 
 function computeTargetDistance(anchor, direction) {
@@ -413,6 +452,32 @@ function computeLightDirection(light, target) {
   const targetWorld = new THREE.Vector3();
   target.getWorldPosition(targetWorld);
   return targetWorld.sub(origin).normalize();
+}
+
+function ensureVolumetric(entry) {
+  if (!entry) return;
+  if (!entry.volumetricMesh) {
+    const mesh = createVolumetricBeam(entry.light.color);
+    mesh.visible = volumetricsEnabled;
+    entry.anchor.add(mesh);
+    entry.volumetricMesh = mesh;
+  } else {
+    entry.volumetricMesh.visible = volumetricsEnabled;
+  }
+  entry.updateVolumetric?.();
+}
+
+function updateHeatmapForSelected() {
+  if (!heatmapPlane) return;
+  const entry = getSelectedLight();
+  const shouldShow = Boolean(heatmapEnabled && entry);
+  heatmapPlane.visible = shouldShow;
+  updateHeatmapUniforms(heatmapPlane, {
+    light: entry?.light ?? null,
+    target: entry?.target ?? null,
+    intensity: entry?.intensity ?? 0,
+    enabled: shouldShow,
+  });
 }
 
 searchInputEl.addEventListener("input", (event) => {
@@ -447,6 +512,8 @@ yawRange.addEventListener("input", () => {
   entry.yaw = Number(yawRange.value);
   updateLightTarget(entry);
   entry.updateHelper?.();
+  entry.updateVolumetric?.();
+  updateHeatmapForSelected();
 });
 
 pitchRange.addEventListener("input", () => {
@@ -456,11 +523,30 @@ pitchRange.addEventListener("input", () => {
   entry.pitch = Number(pitchRange.value);
   updateLightTarget(entry);
   entry.updateHelper?.();
+  entry.updateVolumetric?.();
+  updateHeatmapForSelected();
+});
+
+volumetricsToggle?.addEventListener("change", (event) => {
+  volumetricsEnabled = Boolean(event.target.checked);
+  for (const entry of lightRegistry) {
+    if (volumetricsEnabled) {
+      ensureVolumetric(entry);
+    } else if (entry.volumetricMesh) {
+      entry.volumetricMesh.visible = false;
+    }
+  }
+});
+
+heatmapToggle?.addEventListener("change", (event) => {
+  heatmapEnabled = Boolean(event.target.checked);
+  updateHeatmapForSelected();
 });
 
 loadFixtures();
 updateRangeLabels();
 updateControlAvailability();
+updateHeatmapForSelected();
 
 // Animation loop
 function animate() {
@@ -476,6 +562,7 @@ function animate() {
     } else if (entry.helper) {
       entry.updateHelper?.();
     }
+    entry.updateVolumetric?.();
   }
 
   controls.update();
