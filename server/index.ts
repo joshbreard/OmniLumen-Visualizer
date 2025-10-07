@@ -55,11 +55,15 @@ app.use((req, res, next) => {
   // Serve static Three.js files before Vite middleware
   if (app.get("env") === "development") {
     const clientPath = path.resolve(__dirname, "..", "client");
+    const publicPath = path.resolve(__dirname, "..", "public");
     
-    // Serve static files (script.js, style.css, etc.)
+    // Serve public folder (fixtures, etc.)
+    app.use(express.static(publicPath));
+    
+    // Serve client folder (script.js, style.css, etc.)
     app.use(express.static(clientPath));
     
-    // Serve the Three.js index.html
+    // Serve the Three.js index.html only for root path
     app.get("/", (_req, res) => {
       res.sendFile(path.join(clientPath, "index.html"));
     });
