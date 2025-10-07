@@ -512,6 +512,7 @@ function ensureVolumetric(entry) {
   if (!entry) return;
   if (!entry.volumetricMesh) {
     const mesh = createVolumetricBeam(entry.light.color, entry.volumetricParams);
+    const mesh = createVolumetricBeam(entry.light.color);
     mesh.visible = volumetricsEnabled;
     entry.anchor.add(mesh);
     entry.volumetricMesh = mesh;
