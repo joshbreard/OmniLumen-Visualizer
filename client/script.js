@@ -20,6 +20,7 @@ const yawValueEl = document.getElementById("yaw-value");
 const pitchValueEl = document.getElementById("pitch-value");
 const volumetricsToggle = document.getElementById("volumetrics-toggle");
 const heatmapToggle = document.getElementById("heatmap-toggle");
+const environmentSelect = document.getElementById("environment-select");
 const volumetricDensityRange = document.getElementById("volumetric-density");
 const volumetricFalloffRange = document.getElementById("volumetric-falloff");
 const volumetricDensityValueEl = document.getElementById("volumetric-density-value");
@@ -28,7 +29,10 @@ const volumetricFalloffValueEl = document.getElementById("volumetric-falloff-val
 let volumetricDensityDefault = Number(volumetricDensityRange?.value ?? 0.4);
 let volumetricFalloffDefault = Number(volumetricFalloffRange?.value ?? 0.08);
 
-const ceilingHeight = 3.25;
+let volumetricDensityDefault = Number(volumetricDensityRange?.value ?? 0.4);
+let volumetricFalloffDefault = Number(volumetricFalloffRange?.value ?? 0.08);
+
+const ceilingHeight = 3.0;
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -55,6 +59,7 @@ viewportEl.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+controls.target.set(0, 1.2, 0);
 controls.target.set(0, 1.1, 0);
 
 // Create a cube room (inverted box)
@@ -98,22 +103,28 @@ ceiling.rotation.x = Math.PI / 2;
 ceiling.position.y = ceilingHeight;
 scene.add(ceiling);
 
-// Simple lighting so the room is visible
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
-scene.add(ambientLight);
+const emptyEnvironment = createEmptyEnvironment();
+const roomEnvironment = createRoomEnvironment();
+scene.add(emptyEnvironment);
+scene.add(roomEnvironment);
 
-const keyLight = new THREE.DirectionalLight(0x6b7fa5, 1.4);
-keyLight.position.set(-3.5, 2.2, -2.8);
-keyLight.target.position.set(0, 1.5, 0);
-scene.add(keyLight);
-scene.add(keyLight.target);
+let environmentMode = environmentSelect?.value ?? "empty";
+setEnvironmentMode(environmentMode);
+
+const heatmapPlane = createHeatmapPlane({ size: 25, resolution: 96 });
+heatmapPlane.visible = false;
+scene.add(heatmapPlane);
+
+// Subtle ambient to keep the environment readable without overpowering photometric lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.12);
+scene.add(ambientLight);
 
 // Rotating cube to keep original reference geometry
 const referenceCube = new THREE.Mesh(
   new THREE.BoxGeometry(1.2, 1.2, 1.2),
   new THREE.MeshStandardMaterial({ color: 0x00aa5b, roughness: 0.5 })
 );
-referenceCube.position.set(-0.75, 0.6, -1.25);
+referenceCube.position.set(0, 0.6, 0);
 scene.add(referenceCube);
 
 let fixtures = [];
@@ -122,6 +133,134 @@ const lightRegistry = [];
 let selectedLightId = "";
 let volumetricsEnabled = false;
 let heatmapEnabled = false;
+
+function createEmptyEnvironment() {
+  const group = new THREE.Group();
+  group.name = "EmptyEnvironment";
+
+  const shellSize = 12;
+  const shellGeometry = new THREE.BoxGeometry(shellSize, shellSize, shellSize);
+  const shellMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1b263b,
+    side: THREE.BackSide,
+    roughness: 0.85,
+    metalness: 0.05,
+  });
+  const shell = new THREE.Mesh(shellGeometry, shellMaterial);
+  shell.receiveShadow = true;
+  group.add(shell);
+
+  const groundGeometry = new THREE.PlaneGeometry(25, 25);
+  const groundMaterial = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    roughness: 0.95,
+    metalness: 0.02,
+  });
+  const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = 0;
+  ground.receiveShadow = true;
+  group.add(ground);
+
+  const ceilingGeometry = new THREE.CircleGeometry(3.5, 48);
+  const ceilingMaterial = new THREE.MeshBasicMaterial({
+    color: 0x294166,
+    transparent: true,
+    opacity: 0.45,
+    side: THREE.DoubleSide,
+  });
+  const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+  ceiling.rotation.x = Math.PI / 2;
+  ceiling.position.y = ceilingHeight;
+  group.add(ceiling);
+
+  return group;
+}
+
+function createRoomEnvironment() {
+  const group = new THREE.Group();
+  group.name = "RoomEnvironment";
+
+  const width = 5;
+  const depth = 5;
+  const height = 3;
+
+  const floorMaterial = new THREE.MeshPhongMaterial({
+    color: 0x2a2c30,
+    shininess: 8,
+    specular: new THREE.Color(0x111111),
+  });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), floorMaterial);
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  group.add(floor);
+
+  const wallMaterial = new THREE.MeshPhongMaterial({
+    color: 0xd8dadf,
+    shininess: 12,
+    specular: new THREE.Color(0x202020),
+    side: THREE.DoubleSide,
+  });
+
+  const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wallMaterial);
+  frontWall.position.set(0, height / 2, -depth / 2);
+  frontWall.rotation.y = Math.PI;
+  frontWall.receiveShadow = true;
+  group.add(frontWall);
+
+  const backWall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wallMaterial.clone());
+  backWall.position.set(0, height / 2, depth / 2);
+  backWall.receiveShadow = true;
+  group.add(backWall);
+
+  const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(depth, height), wallMaterial.clone());
+  rightWall.position.set(width / 2, height / 2, 0);
+  rightWall.rotation.y = -Math.PI / 2;
+  rightWall.receiveShadow = true;
+  group.add(rightWall);
+
+  const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(depth, height), wallMaterial.clone());
+  leftWall.position.set(-width / 2, height / 2, 0);
+  leftWall.rotation.y = Math.PI / 2;
+  leftWall.receiveShadow = true;
+  group.add(leftWall);
+
+  const ceilingMaterial = new THREE.MeshPhongMaterial({
+    color: 0xe2e3e6,
+    shininess: 18,
+    specular: new THREE.Color(0x292929),
+    side: THREE.DoubleSide,
+  });
+  const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), ceilingMaterial);
+  ceiling.rotation.x = Math.PI / 2;
+  ceiling.position.y = height;
+  ceiling.receiveShadow = true;
+  group.add(ceiling);
+
+  const panelMaterial = new THREE.MeshPhongMaterial({
+    color: 0xf4f5f7,
+    shininess: 22,
+    specular: new THREE.Color(0x3a3a3a),
+    side: THREE.DoubleSide,
+  });
+  const ceilingPanel = new THREE.Mesh(
+    new THREE.PlaneGeometry(width * 0.6, depth * 0.6),
+    panelMaterial
+  );
+  ceilingPanel.rotation.x = Math.PI / 2;
+  ceilingPanel.position.y = height - 0.02;
+  ceilingPanel.receiveShadow = true;
+  group.add(ceilingPanel);
+
+  group.visible = false;
+  return group;
+}
+
+function setEnvironmentMode(mode) {
+  environmentMode = mode === "room" ? "room" : "empty";
+  emptyEnvironment.visible = environmentMode === "empty";
+  roomEnvironment.visible = environmentMode === "room";
+}
 
 function renderFixtures(list) {
   fixtureListEl.innerHTML = "";
@@ -582,6 +721,10 @@ pitchRange.addEventListener("input", () => {
   updateHeatmapForSelected();
 });
 
+environmentSelect?.addEventListener("change", (event) => {
+  setEnvironmentMode(event.target.value);
+});
+
 volumetricsToggle?.addEventListener("change", (event) => {
   volumetricsEnabled = Boolean(event.target.checked);
   for (const entry of lightRegistry) {
@@ -636,7 +779,6 @@ function animate() {
 
   referenceCube.rotation.x += 0.003;
   referenceCube.rotation.y += 0.0045;
-  room.rotation.y += 0.0006;
 
   for (const entry of lightRegistry) {
     if (entry.helper?.isSpotLightHelper) {
