@@ -52,7 +52,7 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Serve static Three.js files before Vite middleware
+  // Serve static files for the lighting viewer
   if (app.get("env") === "development") {
     const clientPath = path.resolve(__dirname, "..", "client");
     const publicPath = path.resolve(__dirname, "..", "public");
@@ -63,13 +63,13 @@ app.use((req, res, next) => {
     // Serve client folder (script.js, style.css, etc.)
     app.use(express.static(clientPath));
     
-    // Serve the Three.js index.html only for root path
+    // Serve the lighting viewer index.html for root path
     app.get("/", (_req, res) => {
       res.sendFile(path.join(clientPath, "index.html"));
     });
     
-    // Setup Vite for other routes (like React app if needed)
-    await setupVite(app, server);
+    // Vite disabled - using plain HTML/JS with CDN imports for the lighting viewer
+    // await setupVite(app, server);
   } else {
     serveStatic(app);
   }

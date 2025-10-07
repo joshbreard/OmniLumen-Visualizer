@@ -1,6 +1,6 @@
 // CDN module imports for the Three.js runtime and controls.
-import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
-import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 // Local photometry utilities that load IES files and derive light helpers.
 import { loadIESLight, kelvinToRGB } from "./ies.js";
 
@@ -266,7 +266,7 @@ async function handleAddFixture(fixture) {
 async function loadFixtures() {
   try {
     showLoadingState();
-    const response = await fetch("./public/fixtures/fixtures.json");
+    const response = await fetch("./fixtures/fixtures.json");
     if (!response.ok) {
       throw new Error(`Failed to fetch fixtures (${response.status})`);
     }
